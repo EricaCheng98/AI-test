@@ -4,7 +4,7 @@ import { analyzeReceipt } from './services/geminiService';
 import SummaryHeader from './components/SummaryHeader';
 import EditExpenseModal from './components/EditExpenseModal';
 import SettingsModal from './components/SettingsModal';
-import { CameraIcon, getCategoryIcon, UserIcon, PlusIcon, CogIcon, WalletIcon } from './components/Icons';
+import { CameraIcon, getCategoryIcon, PlusIcon, CogIcon, WalletIcon } from './components/Icons';
 
 // Mock initial data
 const INITIAL_EXPENSES: Expense[] = [
@@ -15,18 +15,26 @@ const INITIAL_EXPENSES: Expense[] = [
 const DEFAULT_SETTINGS: AppSettings = {
     userAName: 'You',
     userBName: 'Partner',
-    currentUserId: UserID.A // Defaults to User A
+    currentUserId: UserID.A 
 };
 
 function App() {
   const [expenses, setExpenses] = useState<Expense[]>(() => {
-    const saved = localStorage.getItem('expenses');
-    return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
+    try {
+      const saved = localStorage.getItem('expenses');
+      return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
+    } catch {
+      return INITIAL_EXPENSES;
+    }
   });
 
   const [settings, setSettings] = useState<AppSettings>(() => {
-    const saved = localStorage.getItem('appSettings');
-    return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    try {
+      const saved = localStorage.getItem('appSettings');
+      return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    } catch {
+      return DEFAULT_SETTINGS;
+    }
   });
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -196,7 +204,7 @@ function App() {
           {/* Right Column: Expense List (8 cols) */}
           <div className="lg:col-span-8 space-y-8 pb-24 lg:pb-0">
             {sortedDates.map(date => (
-              <div key={date} className="animate-in slide-in-from-bottom-2 duration-500">
+              <div key={date}>
                 <div className="flex items-center gap-4 mb-3">
                    <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">
                       {new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })}

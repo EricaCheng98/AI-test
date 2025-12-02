@@ -1,8 +1,17 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Category, ExpenseDraft } from "../types";
 
-// Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization to prevent runtime crashes during module load
+let ai: GoogleGenAI | null = null;
+
+const getAiClient = () => {
+  if (!ai) {
+    // Ensure API Key is available or handle gracefully
+    const apiKey = process.env.API_KEY || ''; 
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+};
 
 const SYSTEM_PROMPT = `
 You are an expert accountant and receipt analyzer. 
@@ -17,8 +26,9 @@ Extract the following information:
 export const analyzeReceipt = async (base64Image: string): Promise<ExpenseDraft> => {
   try {
     const cleanBase64 = base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+    const client = getAiClient();
 
-    const response = await ai.models.generateContent({
+    const response = await client.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: {
         parts: [
