@@ -4,7 +4,7 @@ import { analyzeReceipt } from './services/geminiService';
 import SummaryHeader from './components/SummaryHeader';
 import EditExpenseModal from './components/EditExpenseModal';
 import SettingsModal from './components/SettingsModal';
-import { CameraIcon, getCategoryIcon, UserIcon, PlusIcon, CogIcon } from './components/Icons';
+import { CameraIcon, getCategoryIcon, UserIcon, PlusIcon, CogIcon, WalletIcon } from './components/Icons';
 
 // Mock initial data
 const INITIAL_EXPENSES: Expense[] = [
@@ -35,8 +35,7 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const listEndRef = useRef<HTMLDivElement>(null);
-
+  
   // Persist to local storage
   useEffect(() => {
     localStorage.setItem('expenses', JSON.stringify(expenses));
@@ -127,123 +126,172 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
       
-      {/* Header Summary */}
-      <SummaryHeader 
-        expenses={expenses} 
-        currentMonth={new Date()} 
-        userAName={settings.userAName}
-        userBName={settings.userBName}
-      />
-
-      {/* Settings Trigger (Absolute) */}
-      <button 
-        onClick={() => setIsSettingsOpen(true)}
-        className="absolute top-4 right-4 z-20 text-white/80 hover:text-white p-2 bg-black/10 backdrop-blur-md rounded-full"
-      >
-        <CogIcon className="w-5 h-5" />
-      </button>
-
-      {/* Main List Area */}
-      <div className="flex-1 overflow-y-auto px-4 pt-6 pb-24 no-scrollbar space-y-6">
-        {sortedDates.map(date => (
-          <div key={date} className="animate-in slide-in-from-bottom-2 duration-500">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 ml-2">
-                {new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-            </h3>
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              {groupedExpenses[date].map((expense, idx) => (
-                <div 
-                    key={expense.id} 
-                    className={`flex items-center p-4 hover:bg-slate-50 transition-colors ${idx !== groupedExpenses[date].length - 1 ? 'border-b border-slate-50' : ''}`}
-                >
-                  {/* Icon */}
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-xl mr-4 shrink-0">
-                    {getCategoryIcon(expense.category)}
-                  </div>
-
-                  {/* Details */}
-                  <div className="flex-1 min-w-0 mr-4">
-                    <p className="font-semibold text-slate-800 truncate">{expense.item}</p>
-                    <p className="text-xs text-slate-400">{expense.category}</p>
-                  </div>
-
-                  {/* Amount & Payer */}
-                  <div className="flex flex-col items-end">
-                    <span className="font-bold text-slate-900">¥{expense.amount.toFixed(2)}</span>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                          expense.payer === UserID.A 
-                          ? 'bg-purple-100 text-userA' 
-                          : 'bg-rose-100 text-userB'
-                      }`}>
-                        {expense.payer === UserID.A ? settings.userAName : settings.userBName}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+      {/* Navbar */}
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center gap-2">
+              <div className="bg-brand-600 p-2 rounded-xl text-white">
+                <WalletIcon className="w-5 h-5" />
+              </div>
+              <span className="font-bold text-xl tracking-tight text-slate-900">CoSpend</span>
+            </div>
+            <div className="flex items-center">
+              <button 
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-full transition-colors"
+                title="Settings"
+              >
+                <CogIcon className="w-6 h-6" />
+              </button>
             </div>
           </div>
-        ))}
-        <div ref={listEndRef} />
-        
-        {/* Empty State */}
-        {expenses.length === 0 && (
-          <div className="text-center py-20 opacity-50">
-            <div className="text-6xl mb-4">💸</div>
-            <p>No expenses yet. Start tracking!</p>
+        </div>
+      </nav>
+
+      {/* Main Content Layout */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Left Column: Summary & Desktop Actions (4 cols) */}
+          <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+            <SummaryHeader 
+              expenses={expenses} 
+              currentMonth={new Date()} 
+              userAName={settings.userAName}
+              userBName={settings.userBName}
+            />
+
+            {/* Desktop Action Buttons (Visible on LG screens) */}
+            <div className="hidden lg:grid grid-cols-2 gap-4">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isAnalyzing}
+                className="flex flex-col items-center justify-center p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-brand-200 transition-all group"
+              >
+                <div className={`p-3 rounded-full mb-3 transition-colors ${isAnalyzing ? 'bg-brand-50' : 'bg-brand-100 text-brand-600 group-hover:bg-brand-600 group-hover:text-white'}`}>
+                  {isAnalyzing ? (
+                     <div className="w-6 h-6 border-2 border-brand-200 border-t-brand-600 rounded-full animate-spin"></div>
+                  ) : (
+                    <CameraIcon className="w-6 h-6" />
+                  )}
+                </div>
+                <span className="font-bold text-slate-700 group-hover:text-brand-700">Scan Receipt</span>
+              </button>
+              
+              <button
+                onClick={handleManualAdd}
+                className="flex flex-col items-center justify-center p-6 bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md hover:border-brand-200 transition-all group"
+              >
+                <div className="p-3 bg-slate-100 text-slate-500 rounded-full mb-3 group-hover:bg-brand-600 group-hover:text-white transition-colors">
+                  <PlusIcon className="w-6 h-6" />
+                </div>
+                <span className="font-bold text-slate-700 group-hover:text-brand-700">Manual Add</span>
+              </button>
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* Floating Action Button (FAB) */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4 z-40">
-        
-        {/* Hidden File Input */}
-        <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-        />
+          {/* Right Column: Expense List (8 cols) */}
+          <div className="lg:col-span-8 space-y-8 pb-24 lg:pb-0">
+            {sortedDates.map(date => (
+              <div key={date} className="animate-in slide-in-from-bottom-2 duration-500">
+                <div className="flex items-center gap-4 mb-3">
+                   <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">
+                      {new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })}
+                  </h3>
+                  <div className="h-px bg-slate-200 flex-1"></div>
+                </div>
+                
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                  {groupedExpenses[date].map((expense, idx) => (
+                    <div 
+                        key={expense.id} 
+                        className={`flex items-center p-4 sm:p-5 hover:bg-slate-50 transition-colors ${idx !== groupedExpenses[date].length - 1 ? 'border-b border-slate-100' : ''}`}
+                    >
+                      {/* Icon */}
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl mr-4 shrink-0">
+                        {getCategoryIcon(expense.category)}
+                      </div>
 
-        {/* Scan Button */}
+                      {/* Details */}
+                      <div className="flex-1 min-w-0 mr-4">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <p className="font-bold text-slate-800 truncate text-base">{expense.item}</p>
+                        </div>
+                        <p className="text-xs font-medium text-slate-400">{expense.category}</p>
+                      </div>
+
+                      {/* Amount & Payer */}
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="font-bold text-slate-900 text-lg">¥{expense.amount.toFixed(2)}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            expense.payer === UserID.A 
+                            ? 'bg-purple-100 text-userA' 
+                            : 'bg-rose-100 text-userB'
+                        }`}>
+                          {expense.payer === UserID.A ? settings.userAName : settings.userBName}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+            
+            {/* Empty State */}
+            {expenses.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-dashed border-slate-300">
+                <div className="text-7xl mb-6 opacity-80">💸</div>
+                <h3 className="text-xl font-bold text-slate-700 mb-2">No expenses yet</h3>
+                <p className="text-slate-400 max-w-xs text-center">Start tracking your shared expenses by scanning a receipt or adding one manually.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* Floating Action Button (Mobile Only) */}
+      <div className="fixed bottom-6 right-6 lg:hidden z-40 flex flex-col gap-4">
+         <button
+            onClick={handleManualAdd}
+            className="flex items-center justify-center w-12 h-12 bg-white text-brand-600 border border-brand-100 rounded-full shadow-lg transition-transform active:scale-95"
+        >
+            <PlusIcon className="w-6 h-6" />
+        </button>
+
         <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isAnalyzing}
-            className="group relative flex items-center justify-center w-16 h-16 bg-brand-600 rounded-full shadow-lg shadow-brand-500/40 text-white transition-all hover:scale-110 active:scale-95 disabled:opacity-70 disabled:scale-100"
+            className="relative flex items-center justify-center w-16 h-16 bg-brand-600 rounded-full shadow-xl shadow-brand-500/40 text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-70 disabled:scale-100"
         >
             {isAnalyzing ? (
                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             ) : (
                 <CameraIcon className="w-7 h-7" />
             )}
-             <span className="absolute -top-10 bg-black/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                Scan Receipt
-            </span>
-        </button>
-
-         {/* Manual Add Button */}
-         <button
-            onClick={handleManualAdd}
-            className="group relative flex items-center justify-center w-12 h-12 bg-white text-brand-600 border border-brand-100 rounded-full shadow-md text-white transition-all hover:bg-slate-50 hover:scale-110 active:scale-95"
-        >
-            <PlusIcon className="w-6 h-6" />
         </button>
       </div>
 
-      {/* Loading Overlay */}
+      {/* Hidden File Input (Shared) */}
+      <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          className="hidden"
+      />
+
+      {/* Loading Overlay (Global) */}
       {isAnalyzing && (
-        <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
           <div className="w-16 h-16 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-4"></div>
           <p className="text-brand-800 font-medium animate-pulse">Analyzing Receipt...</p>
         </div>
       )}
 
-      {/* Edit/Add Modal */}
+      {/* Modals */}
       <EditExpenseModal
         isOpen={isModalOpen}
         draft={draftExpense}
@@ -255,7 +303,6 @@ function App() {
         defaultPayer={settings.currentUserId}
       />
 
-      {/* Settings Modal */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

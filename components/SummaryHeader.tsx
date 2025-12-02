@@ -22,7 +22,7 @@ const SummaryHeader: React.FC<SummaryHeaderProps> = ({ expenses, currentMonth, u
   const monthName = currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-brand-600 to-brand-800 text-white rounded-b-[2.5rem] shadow-xl pt-12 pb-8 px-6 z-10 transition-all duration-300">
+    <div className="relative overflow-hidden bg-gradient-to-br from-brand-600 to-brand-800 text-white rounded-3xl shadow-xl p-6 md:p-8 z-10 transition-all duration-300">
       
       {/* Decorative circles */}
       <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
