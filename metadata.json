@@ -1,0 +1,7 @@
+{
+  "name": "Copy of CoSpend - Couple Expense Tracker",
+  "description": "A smart, shared expense tracker for couples. Upload receipts to automatically extract details using AI.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
